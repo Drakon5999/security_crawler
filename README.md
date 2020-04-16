@@ -3,6 +3,6 @@
 ## Установка и запуск
 ```
 npm install
-node server.js
+nodejs server.js
 
 ```
