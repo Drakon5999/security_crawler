@@ -2,12 +2,13 @@
   "name": "crauler_pup",
   "version": "0.0.1",
   "description": "A crauler project",
-  "main": "main.js",
+  "main": "crawler.js",
   "private": true,
   "scripts": {},
   "dependencies": {
     "headless-chrome-crawler": "^1.8.0",
-    "puppeteer": "^2.1.1"
+    "puppeteer": "^2.1.1",
+    "socket.io": "^2.3.0"
   },
   "devDependencies": {}
 }
