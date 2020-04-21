@@ -5,37 +5,68 @@ GetEventListeners = function(element) {
 };
 
 let customCrawl = async (page, crawl) => {
-  // You can access the page object before requests
+  let requestedUrls = [];
   await page.setRequestInterception(true);
-  page.on('request', request => {
-    if (request.url().endsWith('/')) {
-      request.continue();
-    } else {
+  RequestHandlerBeforeLoad = function (request) {
+    let url = request.url();
+    requestedUrls.push(request.url());
+
+    if (['image', 'stylesheet', 'font'].indexOf(request.resourceType()) !== -1) {
       request.abort();
+    } else {
+      request.continue();
     }
-  });
-  // The result contains options, links, cookies and etc.
+  }
+  RequestHandlerAfterLoad = function (request) {
+    let url = request.url();
+    requestedUrls.push(request.url());
+
+    if (['image', 'stylesheet', 'font'].indexOf(request.resourceType()) !== -1 || request.isNavigationRequest()) {
+      request.abort();
+    } else {
+      request.continue();
+    }
+  }
+  page.on('request', RequestHandlerBeforeLoad);
+
   const result = await crawl();
-  // You can access the page object after requests
-  result.content =  await page.content();
+  result.content = await page.content();
+  console.log(requestedUrls)
   const elementHandles = await page.$$('*');
+  let eventHandlersMap = new Map();
   result.evl = await elementHandles.reduce(async function(pre, dom) {
     let pre_sync = await pre;
     let eventListeners = await GetEventListeners(dom);
 
-    let clicksListenersCnt = 0;
     if (eventListeners.listeners.length > 0) {
-      clicksListenersCnt = eventListeners.listeners.reduce(function (num, listener) {
-        return num + (listener.type === "click" ? 1 : 0);
-      }, 0)
+      eventHandlersMap.set(dom, eventListeners.listeners);
     }
-    if (clicksListenersCnt > 0) {
-      console.log(dom.toString());
-    }
-    pre_sync += clicksListenersCnt;
     return pre_sync
   }, 0);
-  // You need to extend and return the crawled result
+
+  // prevent changing page url
+  page.removeListener('request', RequestHandlerBeforeLoad);
+  page.on('request', RequestHandlerAfterLoad);
+
+  for (let dom of eventHandlersMap.keys()) {
+    let usedEvents = new Set();
+    for (let listener of eventHandlersMap.get(dom)) {
+      if (usedEvents.has(listener.type)) {
+        continue;
+      }
+
+      // TODO: use trusted Puppeteer events
+      usedEvents.add(listener.type);
+      let text = await page.evaluate(function (element, eventType) {
+        let event = new Event(eventType);
+        element.dispatchEvent(event);
+        return element.innerHTML;
+      }, dom, listener.type);
+    }
+  }
+
+
+  result.requestedUrls = requestedUrls;
   return result;
 }
 

@@ -15,19 +15,21 @@ io.sockets.on('connection', async function (socket) {
             socket.emit("error", {'error': err});
             console.log(err);
         },
-        waitUntil: CrawlerOptions.waitUntil
+        waitUntil: CrawlerOptions.waitUntil,
+        jQuery: false,
+        retryCount: 1
     });
 
     // let ID = (socket.id).toString().substr(0, 5);
     socket.on('new_task', async function (task) {
         console.time(task.url);
-        console.log(crawler)
+        console.log('new_task')
         await crawler.queue({
             url: task.url
         });
     });
 
-    socket.send("Server is ok!");
+    socket.emit("ready", {});
     // При отключении клиента - уведомляем остальных
     socket.on('disconnect', async function() {
         console.log('loose connection')
