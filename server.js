@@ -1,5 +1,7 @@
+"use strict";
 let io = require('socket.io').listen(8855);
 let CrawlerOptions = require('./crawler')
+let DisabledCache = require('./disabled_cache')
 const HCCrawler = require('headless-chrome-crawler');
 
 // Навешиваем обработчик на подключение нового клиента
@@ -17,7 +19,8 @@ io.sockets.on('connection', async function (socket) {
         },
         waitUntil: CrawlerOptions.waitUntil,
         jQuery: false,
-        retryCount: 1
+        retryCount: 0,
+        cache: new DisabledCache()
     });
 
     // let ID = (socket.id).toString().substr(0, 5);
