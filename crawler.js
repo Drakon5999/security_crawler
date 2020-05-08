@@ -20,6 +20,7 @@ let GetElementsHandlers = async function* (ArrayJsHandle, page) {
 }
 
 let GetLinks = async function (page) {
+    // получает все ссылки со страницы. все элементы 'а' shadow-dom
     const current_url = page.url()
     const JsArrayHandle = await page.evaluateHandle(Utils.collectAllElementsDeep, 'a');
 
@@ -44,6 +45,7 @@ let GetLinks = async function (page) {
 }
 
 async function customCrawl(page, crawl) {
+    // результат работы этой функции возвращается в контроллер
     let requestedUrls = [];
     await page.setRequestInterception(true);
     let RequestHandlerBeforeLoad = function (request) {
@@ -73,45 +75,48 @@ async function customCrawl(page, crawl) {
     let eventHandlersMap = new Map();
     let ElementsHandle = await GetElementsHandlers(jsArrayHandle, page);
 
+    result.eventListeners = [];
+
     for await (let dom of ElementsHandle) {
         let eventListeners = await GetEventListeners(dom);
 
         if (eventListeners.listeners.length > 0) {
             eventHandlersMap.set(dom, eventListeners.listeners);
+            result.eventListeners.push(eventListeners.listeners);
         }
     }
 
-    result.urlChanges = [];
-    let currPageUrl = page.url();
-    // prevent changing page url
-    page.removeListener('request', RequestHandlerBeforeLoad);
-    page.on('request', RequestHandlerAfterLoad);
-
-    for (let dom of eventHandlersMap.keys()) {
-        let usedEvents = new Set();
-        for (let listener of eventHandlersMap.get(dom)) {
-            if (usedEvents.has(listener.type)) {
-                continue;
-            }
-            // TODO: use trusted Puppeteer events
-            usedEvents.add(listener.type);
-            await page.evaluate(function (element, eventType) {
-                let event = new Event(eventType);
-                element.dispatchEvent(event);
-                return element.innerHTML;
-            }, dom, listener.type);
-            if (page.url() !== currPageUrl) {
-                let newUrl = page.url();
-                result.urlChanges.push(newUrl);
-                currPageUrl = newUrl;
-            }
-        }
-    }
-
-    // we may find not all links. Try again for the same case
-    result.links = uniq(result.links.concat(await GetLinks(page)))
-
-    result.requestedUrls = requestedUrls;
+    // result.urlChanges = [];
+    // let currPageUrl = page.url();
+    // // prevent changing page url
+    // page.removeListener('request', RequestHandlerBeforeLoad);
+    // page.on('request', RequestHandlerAfterLoad);
+    //
+    // for (let dom of eventHandlersMap.keys()) {
+    //     let usedEvents = new Set();
+    //     for (let listener of eventHandlersMap.get(dom)) {
+    //         if (usedEvents.has(listener.type)) {
+    //             continue;
+    //         }
+    //         // TODO: use trusted Puppeteer events
+    //         usedEvents.add(listener.type);
+    //         await page.evaluate(function (element, eventType) {
+    //             let event = new Event(eventType);
+    //             element.dispatchEvent(event);
+    //             return element.innerHTML;
+    //         }, dom, listener.type);
+    //         if (page.url() !== currPageUrl) {
+    //             let newUrl = page.url();
+    //             result.urlChanges.push(newUrl);
+    //             currPageUrl = newUrl;
+    //         }
+    //     }
+    // }
+    //
+    // // we may find not all links. Try again for the same case
+    // result.links = uniq(result.links.concat(await GetLinks(page)))
+    //
+    // result.requestedUrls = requestedUrls;
     return result;
 }
 
