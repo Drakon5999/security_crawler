@@ -20,7 +20,8 @@ io.sockets.on('connection', async function (socket) {
         waitUntil: CrawlerOptions.waitUntil,
         jQuery: false,
         retryCount: 0,
-        cache: new DisabledCache()
+        cache: new DisabledCache(),
+        obeyRobotsTxt: false
     });
 
     // let ID = (socket.id).toString().substr(0, 5);
