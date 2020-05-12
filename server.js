@@ -14,18 +14,23 @@ io.sockets.on('connection', async function (socket) {
             console.timeEnd(result.options.url);
         },
         onError: err => {
-            socket.emit("error", {'error': err});
+            socket.emit("error");
             console.log(err);
         },
         waitUntil: CrawlerOptions.waitUntil,
         jQuery: false,
         retryCount: 0,
-        cache: new DisabledCache()
+        cache: new DisabledCache(),
+        obeyRobotsTxt: false
     });
 
     // let ID = (socket.id).toString().substr(0, 5);
     socket.on('new_task', async function (task) {
-        console.time(task.url);
+        try {
+            console.time(task.url);
+        } catch (err) {
+            console.log("timer already exist")
+        }
         console.log('new_task')
         await crawler.queue({
             url: task.url

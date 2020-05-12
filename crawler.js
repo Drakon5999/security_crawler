@@ -21,7 +21,13 @@ let GetElementsHandlers = async function* (ArrayJsHandle, page) {
 
 let GetLinks = async function (page) {
     const current_url = page.url()
-    const JsArrayHandle = await page.evaluateHandle(Utils.collectAllElementsDeep, 'a');
+    let JsArrayHandle;
+    try {
+        JsArrayHandle = await page.evaluateHandle(Utils.collectAllElementsDeep, 'a');
+    } catch (e) {
+        // there was a page navigation
+        return [];
+    }
 
     const elementHandlesGenerator = await GetElementsHandlers(JsArrayHandle, page);
     const elementHandles = [];
