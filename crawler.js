@@ -122,7 +122,7 @@ async function customCrawl(page, crawl) {
 
 module.exports = {
     'customCrawl': customCrawl,
-    'waitUntil': 'networkidle0',
+    'waitUntil': 'networkidle2',
     onSuccess: result => {
         console.log('success')
     },
