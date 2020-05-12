@@ -69,7 +69,7 @@ async function customCrawl(page, crawl) {
     page.on('request', RequestHandlerBeforeLoad);
 
     const result = await crawl();
-    result.content = await page.content();
+    await page.content();
     console.log(requestedUrls)
     let jsArrayHandle = await page.evaluateHandle(Utils.collectAllElementsDeep);
     let eventHandlersMap = new Map();
@@ -122,7 +122,7 @@ async function customCrawl(page, crawl) {
 
 module.exports = {
     'customCrawl': customCrawl,
-    'waitUntil': 'networkidle2',
+    'waitUntil': 'networkidle0',
     onSuccess: result => {
         console.log('success')
     },
