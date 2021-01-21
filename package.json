@@ -9,7 +9,7 @@
     "headless-chrome-crawler": "^1.8.0",
     "lodash": "^4.17.15",
     "puppeteer": "^2.1.1",
-    "socket.io": "^2.3.0"
+    "socket.io": "^2.4.0"
   },
   "devDependencies": {}
 }
